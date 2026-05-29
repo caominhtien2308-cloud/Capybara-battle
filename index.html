@@ -5398,16 +5398,32 @@
       }
       
       let host = customServer || document.getElementById('loginServer')?.value.trim() || 'localhost:8765';
-      if (!host.includes(':') && !host.startsWith('ws')) {
-        host += ':8765';
-      }
+      host = host.trim();
       
-      let protocol = 'ws://';
+      let SERVER_URL = '';
       if (host.startsWith('ws://') || host.startsWith('wss://')) {
-        protocol = '';
+        SERVER_URL = host;
+      } else if (host.startsWith('http://')) {
+        SERVER_URL = host.replace('http://', 'ws://');
+      } else if (host.startsWith('https://')) {
+        SERVER_URL = host.replace('https://', 'wss://');
+      } else {
+        let protocol = 'ws://';
+        if (window.location.protocol === 'https:') {
+          protocol = 'wss://';
+        }
+        
+        if (!host.includes(':')) {
+          if (host.includes('.') && !host.startsWith('localhost') && !host.startsWith('127.0.0.1')) {
+            SERVER_URL = protocol + host;
+          } else {
+            SERVER_URL = protocol + host + ':8765';
+          }
+        } else {
+          SERVER_URL = protocol + host;
+        }
       }
       
-      const SERVER_URL = protocol + host;
       console.log("Attempting to connect to CapyBrawl Multiplayer Server at " + SERVER_URL + "...");
       socket = new WebSocket(SERVER_URL);
       
