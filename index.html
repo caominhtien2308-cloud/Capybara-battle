@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -3112,10 +3112,425 @@
     .floating-leaf {
       animation: leafFloat var(--dur, 8s) var(--delay, 0s) linear infinite
     }
+
+    /* ===== PREMIUM ORIENTATION WARNING ===== */
+    #orientation-warning {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #142a12 0%, #060e07 100%);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Outfit', 'Nunito', sans-serif;
+      text-align: center;
+      padding: 24px;
+      box-sizing: border-box;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #orientation-warning.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .warning-icon-wrap {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .warning-phone-icon {
+      width: 44px;
+      height: 72px;
+      border: 3.5px solid #fbbf24;
+      border-radius: 9px;
+      position: relative;
+      animation: rotatePhone 2.2s ease-in-out infinite;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+    }
+
+    .warning-phone-icon::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fbbf24;
+    }
+
+    .warning-arrow {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      border: 3px solid transparent;
+      border-top-color: #a3e635;
+      border-radius: 50%;
+      animation: rotateArrow 2.2s ease-in-out infinite;
+    }
+
+    @keyframes rotatePhone {
+      0% { transform: rotate(0deg); }
+      50%, 100% { transform: rotate(-90deg); }
+    }
+
+    @keyframes rotateArrow {
+      0% { transform: rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      50%, 100% { transform: rotate(-90deg); opacity: 0; }
+    }
+
+    .warning-title {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff 30%, #fbbf24 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    }
+
+    .warning-desc {
+      font-size: 13.5px;
+      color: #a3e635;
+      font-weight: 700;
+      max-width: 290px;
+      line-height: 1.4;
+      opacity: 0.95;
+    }
+
+    /* ===== RESPONSIVE MOBILE LANDSCAPE OPTIMIZATION ===== */
+    @media (max-height: 520px) {
+      /* General Menu Screen Scaling */
+      .menu-wrap {
+        transform: scale(0.85);
+        transform-origin: center center;
+      }
+      .menu-title {
+        font-size: 38px;
+      }
+      .menu-card {
+        padding: 16px 14px;
+        gap: 8px;
+      }
+      .menu-btn {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      /* Lobby Login Container Scaling */
+      .lobby-container {
+        transform: scale(0.85);
+        transform-origin: center center;
+        padding: 10px;
+      }
+      .lobby-logo {
+        margin-bottom: 10px;
+      }
+      .lobby-logo-h1 {
+        font-size: 36px;
+      }
+      .lobby-card {
+        padding: 16px 20px;
+        gap: 10px;
+      }
+      #soundToggle {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+
+      /* Room Screen 2-Column Responsive Layout */
+      .room-wrap {
+        max-width: 98vw;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 10px;
+        padding: 6px 0;
+      }
+      .room-header {
+        grid-column: 1 / -1;
+        margin-bottom: 6px;
+      }
+      .room-header h2 {
+        font-size: 18px;
+      }
+      .back-btn {
+        font-size: 16px;
+        padding: 5px 10px;
+      }
+      .room-wrap > .panel {
+        margin-bottom: 0 !important;
+        padding: 10px 12px !important;
+        border-radius: 12px;
+      }
+      .slots {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+      }
+      .slot {
+        padding: 8px 3px;
+        font-size: 9.5px;
+      }
+      .chat-box {
+        height: 60px;
+        padding: 4px 8px;
+        margin-bottom: 6px;
+      }
+      .mode-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 4px;
+      }
+      .mode-btn {
+        padding: 6px 2px;
+        font-size: 10.5px;
+      }
+      .start-btn {
+        padding: 10px;
+        font-size: 14px;
+        margin-top: 4px;
+      }
+
+      /* Character Selection Layout */
+      .cs-root {
+        grid-template-rows: 44px 1fr 44px !important;
+        grid-template-columns: 210px 1fr 200px !important;
+        gap: 4px !important;
+        padding: 4px !important;
+      }
+      .cs-topbar {
+        height: 44px !important;
+        grid-row: 1 !important;
+      }
+      .cs-topbar h1 {
+        font-size: 18px !important;
+      }
+      .cs-phase-badge {
+        font-size: 9px !important;
+        padding: 3px 8px !important;
+      }
+      #charCountdown {
+        min-width: 44px !important;
+        height: 44px !important;
+        border-width: 2px !important;
+      }
+      #charCountdown svg.cd-ring {
+        inset: -2px !important;
+        width: calc(100% + 4px) !important;
+        height: calc(100% + 4px) !important;
+      }
+      #cdNumber {
+        font-size: 16px !important;
+      }
+      #cdLabel {
+        display: none !important;
+      }
+      .cs-left-col {
+        grid-row: 2 / 4 !important;
+        gap: 4px !important;
+      }
+      #cs-preview-wrap {
+        height: 100px !important;
+      }
+      #previewCapyName {
+        font-size: 11px !important;
+      }
+      #previewWeaponBadge {
+        font-size: 9.5px !important;
+        padding: 1px 6px !important;
+      }
+      .cs-skill-icon-box {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 16px !important;
+      }
+      .cs-skill-desc {
+        display: none !important; /* Hide long descriptions to save space */
+      }
+      .cs-skill-name {
+        font-size: 10.5px !important;
+        margin-bottom: 1px !important;
+      }
+      .cs-skill-pill {
+        padding: 0 4px !important;
+        font-size: 8px !important;
+      }
+      .cs-center-col {
+        grid-row: 2 !important;
+        gap: 4px !important;
+        overflow-y: auto !important;
+      }
+      .cs-section-label {
+        font-size: 8px !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 3px !important;
+      }
+      .cs-color-grid, .cs-weapon-grid {
+        gap: 4px !important;
+      }
+      .capy-card {
+        padding: 5px 3px !important;
+      }
+      .capy-canvas {
+        width: 38px !important;
+        height: 38px !important;
+      }
+      .capy-name, .weapon-name {
+        font-size: 9.5px !important;
+      }
+      .capy-sub, .weapon-desc {
+        display: none !important;
+      }
+      .weapon-card {
+        padding: 5px 3px !important;
+      }
+      .weapon-icon {
+        font-size: 16px !important;
+      }
+      .cs-right-col {
+        grid-row: 2 / 4 !important;
+        gap: 4px !important;
+      }
+      .cs-team-list {
+        padding: 4px !important;
+        gap: 4px !important;
+      }
+      .cs-member {
+        padding: 4px 6px !important;
+        border-width: 1px !important;
+      }
+      .cs-member-avatar {
+        width: 24px !important;
+        height: 24px !important;
+      }
+      .cs-member-name {
+        font-size: 10px !important;
+      }
+      .cs-member-choice {
+        font-size: 8.5px !important;
+      }
+      .cs-member-status {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+      }
+      .cs-bottom-col {
+        grid-row: 3 !important;
+        grid-column: 2 !important;
+      }
+      .cs-chat-body {
+        padding: 4px 6px !important;
+        gap: 4px !important;
+      }
+      .cs-emoji-row {
+        display: none !important;
+      }
+      #csChatInput {
+        padding: 4px 8px !important;
+        font-size: 10.5px !important;
+      }
+      #csChatSend {
+        font-size: 11.5px !important;
+        padding: 0 8px !important;
+      }
+      .ready-btn {
+        padding: 10px !important;
+        font-size: 13.5px !important;
+      }
+
+      /* Game Settings Panel Responsive Customizations */
+      #setting-panel {
+        top: 50px !important;
+        right: 12px !important;
+        width: 280px !important;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        padding: 10px 12px !important;
+        gap: 8px !important;
+      }
+    }
+
+    /* ===== MOBILE BATTLE CONTROLS ARC LAYOUT ===== */
+    @media (pointer: coarse), (max-width: 960px) {
+      #attack-btn {
+        position: fixed !important;
+        bottom: 25px !important;
+        right: 25px !important;
+        width: 78px !important;
+        height: 78px !important;
+        font-size: 32px !important;
+        border-width: 3.5px !important;
+        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.45), inset 0 2px 2px rgba(255,255,255,0.2) !important;
+      }
+      
+      #skill-btn {
+        position: fixed !important;
+        bottom: 45px !important;
+        right: 125px !important;
+        width: 54px !important;
+        height: 54px !important;
+        font-size: 20px !important;
+        border-width: 2.2px !important;
+        box-shadow: 0 4px 16px rgba(167, 139, 250, 0.4) !important;
+      }
+
+      #skill-btn-2 {
+        position: fixed !important;
+        bottom: 110px !important;
+        right: 98px !important;
+        width: 54px !important;
+        height: 54px !important;
+        font-size: 20px !important;
+        border-width: 2.2px !important;
+        box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4) !important;
+      }
+
+      #skill-btn-3 {
+        position: fixed !important;
+        bottom: 152px !important;
+        right: 30px !important;
+        width: 54px !important;
+        height: 54px !important;
+        font-size: 20px !important;
+        border-width: 2.2px !important;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.5) !important;
+      }
+      
+      .skill-key {
+        font-size: 7px !important;
+        padding: 0.5px 2px !important;
+        bottom: 1px !important;
+        right: 1px !important;
+        opacity: 0.8;
+      }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- MOBILE LANDSCAPE ORIENTATION WARNING -->
+  <div id="orientation-warning">
+    <div class="warning-icon-wrap">
+      <div class="warning-phone-icon"></div>
+      <div class="warning-arrow"></div>
+    </div>
+    <div class="warning-title">Xoay Ngang Điện Thoại</div>
+    <div class="warning-desc">Vui lòng xoay ngang màn hình thiết bị để có trải nghiệm chiến đấu tốt nhất!</div>
+  </div>
 
   <!-- BG LEAVES -->
   <div id="bgLeaves"></div>
@@ -3527,6 +3942,46 @@
         this.closePath();
       };
     }
+
+    // ==================== MOBILE LANDSCAPE ORIENTATION WARNING & MULTI-TOUCH VARIABLES ====================
+    let joystickTouchId = null;
+    let aimingTouchId = null;
+
+    function checkOrientation() {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                       ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const warning = document.getElementById('orientation-warning');
+      
+      if (warning) {
+        if (isMobile && isPortrait) {
+          warning.classList.add('active');
+        } else {
+          warning.classList.remove('active');
+        }
+      }
+    }
+
+    // Auto lock orientation to landscape on interaction if screen lock API is available
+    function attemptLockLandscape() {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(err => {
+          console.log("Landscape lock request bypassed or failed: ", err);
+        });
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      checkOrientation();
+      if (gameActive && canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+    window.addEventListener('orientationchange', checkOrientation);
+    document.addEventListener('DOMContentLoaded', checkOrientation);
+    window.addEventListener('click', attemptLockLandscape);
+    window.addEventListener('touchstart', attemptLockLandscape);
 
     // ==================== CONSTANTS ====================
     const CAPY_COLORS = [
@@ -7170,9 +7625,19 @@
       aimingSkillSlot = slot;
       aimingHasDragged = false;
       if (myPlayer) myPlayer.aimingDragRatio = 1.0;
-      const clientX = e.clientX !== undefined ? e.clientX : e.touches?.[0]?.clientX;
-      const clientY = e.clientY !== undefined ? e.clientY : e.touches?.[0]?.clientY;
-      aimingStartPos = { x: clientX, y: clientY };
+
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        const touch = e.changedTouches[0];
+        aimingTouchId = touch.identifier;
+        aimingStartPos = { x: touch.clientX, y: touch.clientY };
+      } else if (e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        aimingTouchId = touch.identifier;
+        aimingStartPos = { x: touch.clientX, y: touch.clientY };
+      } else {
+        aimingTouchId = null;
+        aimingStartPos = { x: e.clientX, y: e.clientY };
+      }
     }
 
     function endAiming() {
@@ -11386,39 +11851,117 @@
       joyKnob = document.getElementById('joystick-knob');
 
       // Touch joystick
-      // Touch joystick
-      joyBase.addEventListener('touchstart', e => { e.preventDefault(); const t = e.targetTouches[0]; joyActive = true; joyStartX = t.clientX; joyStartY = t.clientY; }, { passive: false });
+      joyBase.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        joystickTouchId = touch.identifier;
+        joyActive = true;
+        joyStartX = touch.clientX;
+        joyStartY = touch.clientY;
+      }, { passive: false });
+
       document.addEventListener('touchmove', e => {
-        if (joyActive) {
-          e.preventDefault();
-          const t = e.targetTouches[0];
-          const dx = t.clientX - joyStartX, dy = t.clientY - joyStartY;
-          const dist = Math.min(Math.hypot(dx, dy), 45);
-          const a = Math.atan2(dy, dx);
-          joyVec = { x: Math.cos(a) * dist / 45, y: Math.sin(a) * dist / 45 };
-          joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist}px))`;
-          if (myPlayer && aimingSkillSlot === null) myPlayer.facing = a;
+        if (joyActive && joystickTouchId !== null) {
+          let touch = null;
+          for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === joystickTouchId) {
+              touch = e.touches[i];
+              break;
+            }
+          }
+          if (touch) {
+            e.preventDefault();
+            const dx = touch.clientX - joyStartX, dy = touch.clientY - joyStartY;
+            const dist = Math.min(Math.hypot(dx, dy), 45);
+            const a = Math.atan2(dy, dx);
+            joyVec = { x: Math.cos(a) * dist / 45, y: Math.sin(a) * dist / 45 };
+            joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(a) * dist}px), calc(-50% + ${Math.sin(a) * dist}px))`;
+            if (myPlayer && aimingSkillSlot === null) myPlayer.facing = a;
+          }
         }
         if (aimingSkillSlot && aimingStartPos) {
-          const t = e.targetTouches[0];
-          const dx = t.clientX - aimingStartPos.x, dy = t.clientY - aimingStartPos.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist > 15) {
-            aimingHasDragged = true;
-            if (myPlayer) {
-              myPlayer.facing = Math.atan2(dy, dx);
-              myPlayer.aimingDragRatio = Math.min(1.0, (dist - 15) / 65);
+          let touch = null;
+          if (aimingTouchId !== null) {
+            for (let i = 0; i < e.touches.length; i++) {
+              if (e.touches[i].identifier === aimingTouchId) {
+                touch = e.touches[i];
+                break;
+              }
+            }
+          }
+          if (touch) {
+            const dx = touch.clientX - aimingStartPos.x, dy = touch.clientY - aimingStartPos.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 15) {
+              aimingHasDragged = true;
+              if (myPlayer) {
+                myPlayer.facing = Math.atan2(dy, dx);
+                myPlayer.aimingDragRatio = Math.min(1.0, (dist - 15) / 65);
+              }
             }
           }
         }
       }, { passive: false });
+
       document.addEventListener('touchend', e => {
-        if (joyActive) {
-          joyActive = false; joyVec = { x: 0, y: 0 };
-          joyKnob.style.transform = 'translate(-50%,-50%)';
+        if (joyActive && joystickTouchId !== null) {
+          let released = false;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystickTouchId) {
+              released = true;
+              break;
+            }
+          }
+          if (released) {
+            joyActive = false;
+            joystickTouchId = null;
+            joyVec = { x: 0, y: 0 };
+            joyKnob.style.transform = 'translate(-50%,-50%)';
+          }
         }
-        if (aimingSkillSlot) {
-          endAiming();
+        if (aimingSkillSlot && aimingTouchId !== null) {
+          let released = false;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === aimingTouchId) {
+              released = true;
+              break;
+            }
+          }
+          if (released) {
+            endAiming();
+            aimingTouchId = null;
+          }
+        }
+      });
+
+      document.addEventListener('touchcancel', e => {
+        if (joyActive && joystickTouchId !== null) {
+          let released = false;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystickTouchId) {
+              released = true;
+              break;
+            }
+          }
+          if (released) {
+            joyActive = false;
+            joystickTouchId = null;
+            joyVec = { x: 0, y: 0 };
+            joyKnob.style.transform = 'translate(-50%,-50%)';
+          }
+        }
+        if (aimingSkillSlot && aimingTouchId !== null) {
+          let released = false;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === aimingTouchId) {
+              released = true;
+              break;
+            }
+          }
+          if (released) {
+            endAiming();
+            aimingTouchId = null;
+          }
         }
       });
 
