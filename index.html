@@ -3414,45 +3414,50 @@
 
       /* Character Selection Layout */
       .cs-root {
-        grid-template-rows: 32px 1fr 34px !important;
-        grid-template-columns: 165px 1.25fr 155px !important;
-        gap: 3px !important;
-        padding: 3px !important;
+        grid-template-rows: 26px 1fr 28px !important;
+        grid-template-columns: 140px 1.35fr 135px !important;
+        gap: 2px !important;
+        padding: 2px !important;
+        transform: scale(0.82) !important;
+        transform-origin: center center !important;
+        width: 100% !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
       }
 
       .cs-topbar {
-        height: 32px !important;
+        height: 26px !important;
         grid-row: 1 !important;
       }
 
       .cs-logo-area {
-        gap: 6px !important;
+        gap: 4px !important;
       }
 
       .cs-logo-text {
-        font-size: 14px !important;
+        font-size: 12px !important;
       }
 
       .cs-phase-badge {
-        font-size: 8px !important;
-        padding: 2px 6px !important;
-        border-radius: 6px !important;
+        font-size: 7.5px !important;
+        padding: 1.5px 5px !important;
+        border-radius: 5px !important;
       }
 
       #charCountdown {
-        min-width: 32px !important;
-        height: 32px !important;
-        border-width: 1.5px !important;
+        min-width: 26px !important;
+        height: 26px !important;
+        border-width: 1.2px !important;
       }
 
       #charCountdown svg.cd-ring {
-        inset: -1.5px !important;
-        width: calc(100% + 3px) !important;
-        height: calc(100% + 3px) !important;
+        inset: -1.2px !important;
+        width: calc(100% + 2.4px) !important;
+        height: calc(100% + 2.4px) !important;
       }
 
       #cdNumber {
-        font-size: 13px !important;
+        font-size: 11px !important;
       }
 
       #cdLabel {
@@ -3465,51 +3470,61 @@
       }
 
       .cs-panel-header {
-        padding: 4px 8px 3px !important;
+        padding: 3px 6px 2px !important;
       }
 
       .cs-panel-label {
-        font-size: 7.5px !important;
-        letter-spacing: 1px !important;
+        font-size: 7px !important;
+        letter-spacing: 0.8px !important;
       }
 
       #cs-preview-wrap {
-        height: 70px !important;
+        height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      #previewCanvas,
+      #cs-sparkle-canvas {
+        height: 100% !important;
+        width: 100% !important;
+        object-fit: contain !important;
       }
 
       #previewCapyName {
-        font-size: 9.5px !important;
+        font-size: 9px !important;
       }
 
       #previewWeaponBadge {
-        font-size: 8px !important;
-        padding: 1px 4px !important;
+        font-size: 7.5px !important;
+        padding: 1px 3px !important;
       }
 
       .cs-skills-body {
-        padding: 4px 6px !important;
-        gap: 4px !important;
+        padding: 3px 5px !important;
+        gap: 3px !important;
       }
 
       .cs-skill-row {
-        gap: 4px !important;
+        gap: 3px !important;
       }
 
       .cs-skill-icon-box {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 12px !important;
-        border-radius: 6px !important;
+        width: 22px !important;
+        height: 22px !important;
+        font-size: 11px !important;
+        border-radius: 5px !important;
       }
 
       .cs-skill-name {
-        font-size: 9px !important;
+        font-size: 8.5px !important;
         margin-bottom: 0px !important;
       }
 
       .cs-skill-pill {
-        padding: 0px 3px !important;
-        font-size: 7px !important;
+        padding: 0px 2px !important;
+        font-size: 6.5px !important;
       }
 
       .cs-skill-desc {
@@ -3523,31 +3538,52 @@
       }
 
       .cs-section-label {
-        font-size: 7.5px !important;
-        margin-bottom: 3px !important;
-        padding-bottom: 2px !important;
+        font-size: 7px !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 1.5px !important;
       }
 
       .cs-color-grid,
       .cs-weapon-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 3px !important;
+        max-height: 52px !important;
+        overflow-y: auto !important;
+        padding-right: 4px !important;
+      }
+
+      .cs-color-grid::-webkit-scrollbar,
+      .cs-weapon-grid::-webkit-scrollbar {
+        width: 3px !important;
+      }
+
+      .cs-color-grid::-webkit-scrollbar-thumb,
+      .cs-weapon-grid::-webkit-scrollbar-thumb {
+        background: rgba(163, 230, 53, 0.6) !important;
+        border-radius: 2px !important;
+      }
+
+      .cs-color-grid::-webkit-scrollbar-track,
+      .cs-weapon-grid::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.15) !important;
       }
 
       .capy-card {
         padding: 3px 2px !important;
-        border-radius: 8px !important;
-        border-width: 1.5px !important;
+        border-radius: 6px !important;
+        border-width: 1.2px !important;
       }
 
       .capy-canvas {
-        width: 30px !important;
-        height: 30px !important;
-        margin-bottom: 2px !important;
+        width: 28px !important;
+        height: 28px !important;
+        margin-bottom: 1px !important;
       }
 
       .capy-name,
       .weapon-name {
-        font-size: 8px !important;
+        font-size: 7.5px !important;
       }
 
       .capy-sub,
@@ -3557,12 +3593,12 @@
 
       .weapon-card {
         padding: 3px 2px !important;
-        border-radius: 8px !important;
-        border-width: 1.5px !important;
+        border-radius: 6px !important;
+        border-width: 1.2px !important;
       }
 
       .weapon-icon {
-        font-size: 12px !important;
+        font-size: 11px !important;
         margin-bottom: 1px !important;
       }
 
@@ -4255,6 +4291,7 @@
     // ==================== MOBILE LANDSCAPE ORIENTATION WARNING & MULTI-TOUCH VARIABLES ====================
     let joystickTouchId = null;
     let aimingTouchId = null;
+    let zoomFactor = 1.0;
 
     function checkOrientation() {
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
@@ -4268,6 +4305,13 @@
         } else {
           warning.classList.remove('active');
         }
+      }
+
+      // Automatically set battle camera zoomFactor for mobile viewports
+      if (isMobile) {
+        zoomFactor = 0.55; // Extremely zoomed out (55%) so the map and brawlers look compact and fit perfectly
+      } else {
+        zoomFactor = 1.0;
       }
     }
 
@@ -7021,12 +7065,12 @@
         }
       });
 
-      // Camera follows player
+      // Camera follows player (adjusted for dynamic brawler zoom factor)
       if (myPlayer && myPlayer.alive) {
-        camera.x = myPlayer.x - canvas.width / 2;
-        camera.y = myPlayer.y - canvas.height / 2;
-        camera.x = Math.max(0, Math.min(MAP_W - canvas.width, camera.x));
-        camera.y = Math.max(0, Math.min(MAP_H - canvas.height, camera.y));
+        camera.x = myPlayer.x - (canvas.width / zoomFactor) / 2;
+        camera.y = myPlayer.y - (canvas.height / zoomFactor) / 2;
+        camera.x = Math.max(0, Math.min(MAP_W - (canvas.width / zoomFactor), camera.x));
+        camera.y = Math.max(0, Math.min(MAP_H - (canvas.height / zoomFactor), camera.y));
       }
 
       // Update HUD
@@ -9993,45 +10037,55 @@
       function getSkillRange(p, slot) {
         const wep = p.wepIdx;
         const s = p.size;
+        let range = 150 * s;
 
         if (slot === 3) {
           const skill = p.customSkill;
-          if (!skill) return 150 * s;
-          if (skill.name === 'Hồi máu cấp tốc') return 150 * s;
-          if (skill.name === 'Dã thú trỗi dậy') return 80 * s;
-          if (skill.name === 'Con của thiên lôi') return 150;
-          if (skill.name === 'Kamehameha') return 400;
-          return 150 * s;
+          if (!skill) range = 150 * s;
+          else if (skill.name === 'Hồi máu cấp tốc') range = 150 * s;
+          else if (skill.name === 'Dã thú trỗi dậy') range = 80 * s;
+          else if (skill.name === 'Con của thiên lôi') range = 150;
+          else if (skill.name === 'Kamehameha') range = 400;
+          else range = 150 * s;
+        } else {
+          switch (wep) {
+            case 0: // Sword (Kiếm)
+              if (slot === 1) range = 210 * s; // Lướt kiếm
+              else range = 150 * s; // Kiếm trận
+              break;
+            case 1: // Bow (Cung Tên)
+              if (slot === 1) range = 660; // Mưa tên băng giá (spd 550 * life 1.2)
+              else range = 700; // Mũi tên ánh sáng (spd 700 * life 1.0)
+              break;
+            case 2: // Axe (Rìu)
+              if (slot === 1) range = 130 * s; // Lốc xoáy
+              else range = 180; // Bổ củi nổ đất (nhảy 180)
+              break;
+            case 3: // Hammer (Chùy)
+              if (slot === 1) range = 160 * s; // Dậm đất thiên địa
+              else range = 80 * s; // Khiên sắt (tự thân)
+              break;
+            case 4: // Gun (Súng)
+              if (slot === 1) range = 455; // Xả đạn (spd 650 * life 0.7)
+              else range = 720; // Khẩu pháo công phá (spd 800 * life 0.9)
+              break;
+            case 5: // Magic Wand (Gậy Phép)
+              if (slot === 1) range = 320; // Sét xích
+              else range = 160; // Hố đen (cast 160)
+              break;
+            default:
+              range = 240 * s;
+          }
         }
 
-        switch (wep) {
-          case 0: // Sword (Kiếm)
-            if (slot === 1) return 210 * s; // Lướt kiếm
-            return 150 * s; // Kiếm trận
-
-          case 1: // Bow (Cung Tên)
-            if (slot === 1) return 660; // Mưa tên băng giá (spd 550 * life 1.2)
-            return 700; // Mũi tên ánh sáng (spd 700 * life 1.0)
-
-          case 2: // Axe (Rìu)
-            if (slot === 1) return 130 * s; // Lốc xoáy
-            return 180; // Bổ củi nổ đất (nhảy 180)
-
-          case 3: // Hammer (Chùy)
-            if (slot === 1) return 160 * s; // Dậm đất thiên địa
-            return 80 * s; // Khiên sắt (tự thân)
-
-          case 4: // Gun (Súng)
-            if (slot === 1) return 455; // Xả đạn (spd 650 * life 0.7)
-            return 720; // Khẩu pháo công phá (spd 800 * life 0.9)
-
-          case 5: // Magic Wand (Gậy Phép)
-            if (slot === 1) return 320; // Sét xích
-            return 160; // Hố đen (cast 160)
-
-          default:
-            return 240 * s;
+        // Limit skill aiming range on mobile landscape to prevent indicator overflowing the screen
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+          ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isMobile) {
+          range *= 0.65;
         }
+
+        return range;
       }
 
       function getSkillAimType(p, slot) {
@@ -10208,8 +10262,8 @@
 
       // Draw Canopies & Apples of Red Apple Trees (drawn after players for occlusion!)
       appleTrees.forEach(tree => {
-        if (tree.x > camera.x - tree.canopyR - 100 && tree.x < camera.x + canvas.width + tree.canopyR + 100 &&
-          tree.y > camera.y - tree.canopyR - 250 && tree.y < camera.y + canvas.height + tree.canopyR + 100) {
+        if (tree.x > camera.x - tree.canopyR - 100 && tree.x < camera.x + (canvas.width / zoomFactor) + tree.canopyR + 100 &&
+          tree.y > camera.y - tree.canopyR - 250 && tree.y < camera.y + (canvas.height / zoomFactor) + tree.canopyR + 100) {
           ctx.save();
           ctx.translate(tree.x, tree.y);
 
@@ -10320,8 +10374,8 @@
 
       // Draw glowing fireflies (world space)
       fireflies.forEach(ff => {
-        if (ff.x > camera.x - 30 && ff.x < camera.x + canvas.width + 30 &&
-          ff.y > camera.y - 30 && ff.y < camera.y + canvas.height + 30) {
+        if (ff.x > camera.x - 30 && ff.x < camera.x + (canvas.width / zoomFactor) + 30 &&
+          ff.y > camera.y - 30 && ff.y < camera.y + (canvas.height / zoomFactor) + 30) {
           ctx.save();
           ctx.translate(ff.x, ff.y);
 
