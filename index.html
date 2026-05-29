@@ -4332,7 +4332,10 @@
       }
     });
     window.addEventListener('orientationchange', checkOrientation);
-    document.addEventListener('DOMContentLoaded', checkOrientation);
+    document.addEventListener('DOMContentLoaded', () => {
+      checkOrientation();
+      connectToServer();
+    });
     window.addEventListener('click', attemptLockLandscape);
     window.addEventListener('touchstart', attemptLockLandscape);
 
@@ -4436,6 +4439,15 @@
     let gameActive = false;
     let myPlayer = null;
     let players = [], leaves = [], particles = [], damageNumbers = [], supernovas = [];
+
+    // --- MULTIPLAYER NETWORK STATE ---
+    let socket = null;
+    let isOnlineMode = false;
+    let myNetId = null;
+    let onlineRoomCode = '';
+    let onlineClients = [];
+    let isHost = false;
+    let networkSendInterval = null;
     let camera = { x: 0, y: 0 };
     let joyVec = { x: 0, y: 0 };
     let joyActive = false, joyStartX = 0, joyStartY = 0;
@@ -5330,7 +5342,7 @@
       currentUser = u;
       hideAll();
       document.getElementById('menuScreen').classList.remove('hidden');
-      document.getElementById('menuWelcome').textContent = `Chào mừng trở lại, ${u}! 🦫`;
+      document.getElementById('menuWelcome').innerHTML = `Chào mừng trở lại, ${u}! 🦫 <span style="font-size:11px; padding:3px 8px; border-radius:12px; margin-left:8px; font-weight:bold; background:${isOnlineMode ? '#10B981' : '#6B7280'}; color:#fff; display:inline-block; vertical-align:middle; line-height:1.2;">${isOnlineMode ? '● ONLINE' : '● OFFLINE (BOTS)'}</span>`;
       buildMenuCapys();
       AudioManager.playBGM('lobby');
     }
@@ -5364,27 +5376,410 @@
       });
     }
 
+    // ==================== MULTIPLAYER NETWORK SYSTEM ====================
+    function connectToServer() {
+      const SERVER_URL = 'ws://localhost:8765';
+      console.log("Attempting to connect to CapyBrawl Multiplayer Server at " + SERVER_URL + "...");
+      socket = new WebSocket(SERVER_URL);
+      
+      socket.onopen = () => {
+        isOnlineMode = true;
+        console.log("Connected to CapyBrawl Multiplayer Server successfully!");
+      };
+      
+      socket.onerror = (err) => {
+        isOnlineMode = false;
+        console.warn("Could not connect to multiplayer server, falling back to Offline mode.");
+      };
+      
+      socket.onclose = () => {
+        isOnlineMode = false;
+        console.warn("Multiplayer server disconnected. Offline fallback active.");
+        if (gameActive) {
+          alert("Mất kết nối với máy chủ!");
+          stopGame();
+          showMenu();
+        }
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          handleServerMessage(msg);
+        } catch(e) {
+          console.error("Error parsing socket message:", e);
+        }
+      };
+    }
+
+    function handleServerMessage(msg) {
+      const { type, data } = msg;
+      
+      if (type === 'room-created') {
+        myNetId = data.myId;
+        isHost = true;
+        onlineRoomCode = data.code;
+        onlineClients = data.clients;
+        
+        document.getElementById('roomScreen').classList.remove('hidden');
+        document.getElementById('roomTitle').textContent = '🏠 Phòng Online (' + onlineRoomCode + ')';
+        document.getElementById('roomCode').textContent = onlineRoomCode;
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('startBtn').textContent = '🦫 Bắt Đầu Trận!';
+        
+        updatePlayerSlotsOnline(onlineClients);
+      }
+      else if (type === 'room-joined') {
+        myNetId = data.myId;
+        isHost = false;
+        onlineRoomCode = data.code;
+        onlineClients = data.clients;
+        
+        document.getElementById('roomScreen').classList.remove('hidden');
+        document.getElementById('roomTitle').textContent = '🏠 Phòng Online (' + onlineRoomCode + ')';
+        document.getElementById('roomCode').textContent = onlineRoomCode;
+        document.getElementById('startBtn').style.display = 'none'; // Only Host can start
+        
+        updatePlayerSlotsOnline(onlineClients);
+        addChatMsg('Hệ thống', 'Đã vào phòng ' + onlineRoomCode);
+      }
+      else if (type === 'room-update') {
+        onlineClients = data.clients;
+        const me = onlineClients.find(c => c.id === myNetId);
+        if (me) {
+          isHost = me.isHost;
+        }
+        document.getElementById('startBtn').style.display = isHost ? 'block' : 'none';
+        
+        // If we are currently in roomScreen
+        if (!document.getElementById('roomScreen').classList.contains('hidden')) {
+          updatePlayerSlotsOnline(onlineClients);
+        }
+        // If we are currently in charScreen
+        if (!document.getElementById('charScreen').classList.contains('hidden')) {
+          csRenderTeamOnline();
+          updateReadyBtnOnline();
+        }
+      }
+      else if (type === 'chat') {
+        addChatMsg(data.sender, data.text);
+      }
+      else if (type === 'error') {
+        alert(data.message);
+        showMenu();
+      }
+      else if (type === 'start-char-select') {
+        startCharSelectOnline();
+      }
+      else if (type === 'start-game') {
+        enterBattleOnline();
+      }
+      else if (type === 'state-update') {
+        const p = players.find(x => x.netId === data.id);
+        if (p) {
+          p.targetX = data.x;
+          p.targetY = data.y;
+          p.vx = data.vx;
+          p.vy = data.vy;
+          p.facing = data.facing;
+          p.hp = data.hp;
+          p.maxHp = data.maxHp;
+          p.alive = data.alive;
+          p.animTime = data.animTime;
+          p.attackAnim = data.attackAnim;
+          p.skillAnim = data.skillAnim;
+          p.beastModeTime = data.beastModeTime;
+          p.rollAnim = data.rollAnim;
+          p.wandShield = data.wandShield;
+          p.ironBastionShield = data.ironBastionShield;
+        }
+      }
+      else if (type === 'bot-state-update') {
+        let p = players.find(x => data.isGiftBox ? (x.isGiftBox && x.id === data.id) : (x.isAI && x.name === data.name));
+        if (!p) {
+          // Spawn gift box dynamically if not found
+          if (data.isGiftBox) {
+            p = {
+              id: data.id,
+              name: "Hộp Quà",
+              team: 'NEUTRAL',
+              isGiftBox: true,
+              isAI: false,
+              alive: data.alive,
+              hp: data.hp, maxHp: data.maxHp,
+              x: data.x, y: data.y,
+              vx: data.vx, vy: data.vy,
+              size: 1.3,
+              inBush: false
+            };
+            players.push(p);
+            triggerGiftAlert();
+          }
+        } else {
+          p.targetX = data.x;
+          p.targetY = data.y;
+          p.vx = data.vx;
+          p.vy = data.vy;
+          p.facing = data.facing;
+          p.hp = data.hp;
+          p.alive = data.alive;
+          p.attackAnim = data.attackAnim || 0;
+          p.skillAnim = data.skillAnim || 0;
+        }
+      }
+      else if (type === 'player-attack') {
+        const p = players.find(x => x.netId === data.id);
+        if (p) {
+          p.facing = data.angle;
+          doAttack(p);
+        }
+      }
+      else if (type === 'player-skill') {
+        const p = players.find(x => x.netId === data.id);
+        if (p) {
+          p.facing = data.angle;
+          doSkill(p, data.slot);
+        }
+      }
+      else if (type === 'apply-damage') {
+        const target = players.find(x => data.isBot ? (x.isAI && x.name === data.target) : (!x.isAI && x.netId === data.target));
+        if (target && target.alive) {
+          target.hp = Math.max(0, target.hp - data.amount);
+          target.knockX += data.kx;
+          target.knockY += data.ky;
+          if (target.hp <= 0) {
+            target.alive = false;
+            // Trigger local death code (splices and particles)
+            if (target.isGiftBox) {
+              spawnKOParticles(target.x, target.y);
+              spawnDroppedSkill(target.x, target.y);
+              const idx = players.indexOf(target);
+              if (idx !== -1) players.splice(idx, 1);
+            } else {
+              spawnKOParticles(target.x, target.y);
+            }
+          }
+          // Spawn local damage numbers
+          damageNumbers.push({
+            x: target.x, y: target.y - 20,
+            text: data.amount.toFixed(0),
+            life: 0.8, maxLife: 0.8,
+            color: target.team === 'A' ? '#FF6B6B' : '#4ECDC4'
+          });
+        }
+      }
+      else if (type === 'spawn-dropped-skill') {
+        // Spawn for non-host
+        spawnDroppedSkill(data.x, data.y, data.skillIdx);
+      }
+      else if (type === 'gift-absorbed') {
+        const p = players.find(x => x.name === data.playerName);
+        if (p) {
+          p.customSkill = data.skillId;
+          const banner = document.getElementById('absorb-banner');
+          if (banner) {
+            document.getElementById('absorb-title').innerHTML = `🎉 <b>${p.name}</b> đã hấp thụ quà!`;
+            document.getElementById('absorb-subtitle').innerHTML = `Nhận được tuyệt kỹ bí ẩn: <b>⚡ ${p.customSkill.name}</b>`;
+            banner.classList.remove('hidden');
+            setTimeout(() => banner.classList.add('hidden'), 3000);
+          }
+          AudioManager.play('powerup');
+        }
+      }
+    }
+
+    function updatePlayerSlotsOnline(clients) {
+      const slots = document.getElementById('playerSlots');
+      if (!slots) return;
+      slots.innerHTML = '';
+      
+      const { perTeam } = getModeInfo();
+      const totalSlots = perTeam * 2;
+      
+      const teamA = clients.filter(c => c.team === 'A');
+      const teamB = clients.filter(c => c.team === 'B');
+      
+      for (let i = 0; i < totalSlots; i++) {
+        const slot = document.createElement('div');
+        const isTeamA = i < perTeam;
+        const list = isTeamA ? teamA : teamB;
+        const idx = isTeamA ? i : i - perTeam;
+        const p = list[idx];
+        
+        slot.className = 'slot' + (p ? ' filled' : '') + (p && p.id === myNetId ? ' you' : '');
+        
+        if (p) {
+          slot.innerHTML = `
+            <div style="font-size:20px">🦫</div>
+            <div style="font-size:11px; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px;">${p.name}</div>
+            <div style="font-size:10px; color:${p.team === 'A' ? '#4ECDC4' : '#FF6B6B'}">Đội ${p.team}</div>
+            <div style="font-size:8px; opacity:0.8;">${p.isHost ? '👑 Chủ phòng' : (p.ready ? '✓ Sẵn sàng' : '⏳ Chờ')}</div>
+          `;
+          
+          if (p.id === myNetId) {
+            slot.style.cursor = 'pointer';
+            slot.onclick = () => {
+              socket.send(JSON.stringify({ type: 'change-team' }));
+            };
+          }
+        } else {
+          slot.innerHTML = `<div style="font-size:18px; opacity:.3">+</div><div>Trống</div>`;
+        }
+        slots.appendChild(slot);
+      }
+    }
+
+    function csRenderTeamOnline() {
+      const list = document.getElementById('csTeamList');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      onlineClients.forEach(c => {
+        const isMe = (c.id === myNetId);
+        const clr = CAPY_COLORS[c.capyIdx] || CAPY_COLORS[0];
+        const wep = c.wepIdx >= 0 ? WEAPONS[c.wepIdx] : null;
+        list.appendChild(csCreateMember(c.name + (isMe ? ' (Tôi)' : ''), clr, wep, isMe, c.ready));
+      });
+    }
+
+    function updateReadyBtnOnline() {
+      const btn = document.getElementById('readyBtn');
+      if (!btn || !isOnlineMode) return;
+      
+      if (isHost) {
+        btn.textContent = '🚀 BẮT ĐẦU TRẬN ĐẤU!';
+        btn.style.background = 'linear-gradient(135deg, #fbbf24, #d97706)';
+        btn.disabled = false;
+      } else {
+        const me = onlineClients.find(c => c.id === myNetId);
+        if (me) {
+          if (me.ready) {
+            btn.textContent = '✓ ĐÃ SẴN SÀNG (HỦY)';
+            btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
+            btn.disabled = false;
+          } else {
+            btn.textContent = '⚔️ SẴN SÀNG!';
+            btn.style.background = '';
+            btn.disabled = selectedWeapon < 0;
+          }
+        }
+      }
+    }
+
+    function startCharSelectOnline() {
+      startCharSelectOffline();
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'select',
+          data: { capyIdx: selectedCapy, wepIdx: selectedWeapon }
+        }));
+      }
+    }
+
+    function enterBattleOnline() {
+      enterBattleOffline();
+    }
+
+    function startNetworkSync() {
+      clearInterval(networkSendInterval);
+      networkSendInterval = setInterval(() => {
+        if (!gameActive || !myPlayer || !socket || socket.readyState !== WebSocket.OPEN) return;
+        
+        socket.send(JSON.stringify({
+          type: 'state',
+          data: {
+            x: myPlayer.x,
+            y: myPlayer.y,
+            vx: myPlayer.vx,
+            vy: myPlayer.vy,
+            facing: myPlayer.facing,
+            hp: myPlayer.hp,
+            maxHp: myPlayer.maxHp,
+            alive: myPlayer.alive,
+            animTime: myPlayer.animTime,
+            attackAnim: myPlayer.attackAnim,
+            skillAnim: myPlayer.skillAnim,
+            beastModeTime: myPlayer.beastModeTime,
+            rollAnim: myPlayer.rollAnim,
+            wandShield: myPlayer.wandShield,
+            ironBastionShield: myPlayer.ironBastionShield
+          }
+        }));
+        
+        if (isHost) {
+          const botsAndGifts = players.filter(p => p !== myPlayer && (p.isAI || p.isGiftBox));
+          botsAndGifts.forEach(b => {
+            socket.send(JSON.stringify({
+              type: 'bot-state',
+              data: {
+                id: b.id || b.name,
+                name: b.name,
+                isGiftBox: b.isGiftBox || false,
+                x: b.x,
+                y: b.y,
+                vx: b.vx,
+                vy: b.vy,
+                facing: b.facing || 0,
+                hp: b.hp,
+                maxHp: b.maxHp,
+                alive: b.alive,
+                attackAnim: b.attackAnim || 0,
+                skillAnim: b.skillAnim || 0
+              }
+            }));
+          });
+        }
+      }, 35);
+    }
+
     // ==================== ROOM ====================
     let roomPlayers = [];
     function showRoom(ai) {
       vsAI = ai;
       hideAll();
       document.getElementById('roomScreen').classList.remove('hidden');
-      document.getElementById('roomTitle').textContent = ai ? '🤖 Đấu với AI' : '🏠 Tạo Phòng';
+      
+      if (isOnlineMode && !ai && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'create',
+          data: { name: currentUser, mode: currentMode }
+        }));
+        AudioManager.playBGM('room');
+        return;
+      }
+      
+      document.getElementById('roomTitle').textContent = ai ? '🤖 Đấu với AI' : '🏠 Tạo Phòng (Local)';
       document.getElementById('roomCode').textContent = Math.random().toString(36).substr(2, 6).toUpperCase();
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('startBtn').textContent = '🦫 Bắt Đầu Trận!';
       updatePlayerSlots();
       if (ai) { simulateAIJoin(); }
       AudioManager.playBGM('room');
     }
     function showJoinRoom() {
-      const code = prompt('Nhập mã phòng:');
-      if (code) { showRoom(false); addChatMsg('Hệ thống', 'Đã vào phòng ' + code.toUpperCase()); }
+      const code = prompt(isOnlineMode ? 'Nhập mã phòng online:' : 'Nhập mã phòng:');
+      if (code) { 
+        if (isOnlineMode && socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: 'join',
+            data: { code: code.toUpperCase().trim(), name: currentUser }
+          }));
+        } else {
+          showRoom(false); 
+          addChatMsg('Hệ thống', 'Đã vào phòng ' + code.toUpperCase()); 
+        }
+      }
     }
     function selectMode(btn, mode) {
       currentMode = mode;
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      updatePlayerSlots();
+      if (isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        // Recreation of room with different mode is simpler by clicking create again, but let's update slots locally
+        updatePlayerSlots();
+      } else {
+        updatePlayerSlots();
+      }
     }
     function getModeInfo() {
       const n = parseInt(currentMode[0]);
@@ -5425,11 +5820,19 @@
     function sendChat() {
       const inp = document.getElementById('chatInput');
       if (!inp.value.trim()) return;
-      addChatMsg(currentUser, inp.value);
-      inp.value = '';
-      // simulate reply
-      const replies = ['Tiến thôi! 🦫', 'Tôi sẵn sàng nghiền nát! 💪', 'Coi chừng capybara to của tôi! 🦫', 'GG sắp xong rồi!', 'Capybara tôi đang đói lá 🍃'];
-      if (Math.random() > 0.5) setTimeout(() => addChatMsg(roomPlayers[1]?.name || 'Bot', replies[Math.floor(Math.random() * replies.length)]), 800 + Math.random() * 1200);
+      
+      if (isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'chat',
+          data: { text: inp.value }
+        }));
+        inp.value = '';
+      } else {
+        addChatMsg(currentUser, inp.value);
+        inp.value = '';
+        const replies = ['Tiến thôi! 🦫', 'Tôi sẵn sàng nghiền nát! 💪', 'Coi chừng capybara to của tôi! 🦫', 'GG sắp xong rồi!', 'Capybara tôi đang đói lá 🍃'];
+        if (Math.random() > 0.5) setTimeout(() => addChatMsg(roomPlayers[1]?.name || 'Bot', replies[Math.floor(Math.random() * replies.length)]), 800 + Math.random() * 1200);
+      }
     }
     function copyRoomCode() {
       const code = document.getElementById('roomCode').textContent;
@@ -5444,6 +5847,16 @@
     const CD_CIRCUMFERENCE = 2 * Math.PI * 36; // r=36 → ~226.2
 
     function startCharSelect() {
+      if (isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        if (isHost) {
+          socket.send(JSON.stringify({ type: 'start-char-select' }));
+        }
+        return;
+      }
+      startCharSelectOffline();
+    }
+
+    function startCharSelectOffline() {
       hideAll();
       document.getElementById('charScreen').classList.remove('hidden');
       buildCapyGrid();
@@ -6027,6 +6440,31 @@
 
     // ==================== ENTER BATTLE ====================
     function enterBattle() {
+      if (isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        handleReadyBtnClick();
+        return;
+      }
+      enterBattleOffline();
+    }
+
+    function handleReadyBtnClick() {
+      if (isHost) {
+        const unready = onlineClients.filter(c => !c.isHost && !c.ready);
+        if (unready.length > 0) {
+          const names = unready.map(c => c.name).join(', ');
+          if (!confirm(`Một số thành viên chưa sẵn sàng: ${names}. Bạn vẫn muốn bắt đầu chứ?`)) {
+            return;
+          }
+        }
+        socket.send(JSON.stringify({ type: 'start-game' }));
+      } else {
+        const me = onlineClients.find(c => c.id === myNetId);
+        const nextReady = me ? !me.ready : true;
+        socket.send(JSON.stringify({ type: 'ready', data: { ready: nextReady } }));
+      }
+    }
+
+    function enterBattleOffline() {
       stopCharCountdown();
       if (previewAnimFrame) { cancelAnimationFrame(previewAnimFrame); previewAnimFrame = null; }
       hideAll();
@@ -6069,6 +6507,7 @@
       const wep = WEAPONS[selectedWeapon];
       document.getElementById('skillIcon').textContent = wep.skills[0].icon;
       document.getElementById('skillIcon2').textContent = wep.skills[1].icon;
+      if (isOnlineMode && !vsAI) { startNetworkSync(); }
     }
 
     function isTargetVisible(viewer, target) {
@@ -6276,14 +6715,68 @@
 
     function spawnPlayers() {
       players = [];
-      const { perTeam } = getModeInfo();
       const wepIdx = selectedWeapon;
 
-      // My player
+      if (isOnlineMode && !vsAI) {
+        // Online Spawn Mode
+        const meInfo = onlineClients.find(c => c.id === myNetId);
+        const myTeam = meInfo ? meInfo.team : 'A';
+        
+        // 1. Spawn myself
+        const mySpawnX = myTeam === 'A' ? 200 + Math.random() * 200 : MAP_W - 400 - Math.random() * 200;
+        const mySpawnY = 200 + Math.random() * (MAP_H - 400);
+        myPlayer = createPlayer(currentUser, myTeam, false, selectedCapy, wepIdx, mySpawnX, mySpawnY);
+        myPlayer.netId = myNetId;
+        players.push(myPlayer);
+
+        // 2. Spawn other real players
+        onlineClients.forEach(c => {
+          if (c.id === myNetId) return;
+          const spawnX = c.team === 'A' ? 200 + Math.random() * 200 : MAP_W - 400 - Math.random() * 200;
+          const spawnY = 200 + Math.random() * (MAP_H - 400);
+          const p = createPlayer(c.name, c.team, false, c.capyIdx, c.wepIdx, spawnX, spawnY);
+          p.netId = c.id;
+          p.isAI = false;
+          players.push(p);
+        });
+
+        // 3. Host spawns bots for empty slots to balance teams
+        if (isHost) {
+          const { perTeam } = getModeInfo();
+          
+          const teamAOnline = onlineClients.filter(c => c.team === 'A').length;
+          const teamBOnline = onlineClients.filter(c => c.team === 'B').length;
+          
+          const botCountA = Math.max(0, perTeam - teamAOnline);
+          const botCountB = Math.max(0, perTeam - teamBOnline);
+          
+          const capyIdxs = [1, 2, 3, 4, 5, 0];
+          const weps = [0, 1, 2, 3, 4, 5];
+          let ai = 0;
+
+          // Spawn Team A bots
+          for (let i = 0; i < botCountA; i++) {
+            const spawnX = 200 + Math.random() * 200;
+            const spawnY = 200 + Math.random() * (MAP_H - 400);
+            const p = createPlayer(`Bot-A-${ai++}`, 'A', true, capyIdxs[i % 6], weps[i % 6], spawnX, spawnY);
+            players.push(p);
+          }
+          // Spawn Team B bots
+          for (let i = 0; i < botCountB; i++) {
+            const spawnX = MAP_W - 400 - Math.random() * 200;
+            const spawnY = 200 + Math.random() * (MAP_H - 400);
+            const p = createPlayer(`Bot-B-${ai++}`, 'B', true, capyIdxs[(i + 3) % 6], weps[(i + 3) % 6], spawnX, spawnY);
+            players.push(p);
+          }
+        }
+        return;
+      }
+
+      // Original offline AI spawn mode
+      const { perTeam } = getModeInfo();
       myPlayer = createPlayer(currentUser, 'A', false, selectedCapy, wepIdx, 200 + Math.random() * 200, 200 + Math.random() * 200);
       players.push(myPlayer);
 
-      // Room players/AI
       const capyIdxs = [1, 2, 3, 4, 5, 0];
       const weps = [0, 1, 2, 3, 4, 5];
       let ai = 0;
@@ -7048,10 +7541,17 @@
         p.vx *= 0.82; p.vy *= 0.82;
 
         // move
-        const nx = p.x + p.vx, ny = p.y + p.vy;
-        const r = 20 * p.size;
-        p.x = Math.max(r, Math.min(MAP_W - r, nx));
-        p.y = Math.max(r, Math.min(MAP_H - r, ny));
+        if (isOnlineMode && !vsAI && p !== myPlayer && (!p.isAI || !isHost)) {
+          if (p.targetX !== undefined && p.targetY !== undefined) {
+            p.x += (p.targetX - p.x) * 0.3;
+            p.y += (p.targetY - p.y) * 0.3;
+          }
+        } else {
+          const nx = p.x + p.vx, ny = p.y + p.vy;
+          const r = 20 * p.size;
+          p.x = Math.max(r, Math.min(MAP_W - r, nx));
+          p.y = Math.max(r, Math.min(MAP_H - r, ny));
+        }
 
         // collect leaves
         for (let i = leaves.length - 1; i >= 0; i--) {
@@ -7479,6 +7979,13 @@
       if (attacker.attackState !== 'idle' && attacker.attackState !== 'recovery') return;
       if (attacker.attackCD > 0) return;
 
+      if (attacker === myPlayer && isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'attack',
+          data: { angle: myPlayer.facing }
+        }));
+      }
+
       // Iron Bastion: First attack leap / close in to enemy in 150px range
       if (attacker.wepIdx === 3 && attacker.ironBastionFirstAttackLeap) {
         const enemies = players.filter(p => p.alive && p.team !== attacker.team);
@@ -7784,6 +8291,44 @@
     }
 
     function dealDamage(attacker, target, amount, customKnockback = null) {
+      if (isOnlineMode && !vsAI) {
+        const isMyAttack = (attacker === myPlayer);
+        const isBotAttackIControl = (isHost && attacker && attacker.isAI);
+        
+        if (!isMyAttack && !isBotAttackIControl) {
+          return; // Skip calculations for other clients' attacks to prevent duplicate damage
+        }
+        
+        if (attacker && attacker.beastModeTime > 0) {
+          amount *= 2;
+        }
+        const defPercent = Math.min(0.75, target.defense * 0.01);
+        const finalAmount = Math.max(5, Math.floor(amount * (1 - defPercent)));
+        
+        let kx = 0, ky = 0;
+        if (target.ironBastionTime <= 0) {
+          const dx = target.x - (attacker ? attacker.x : target.x), dy = target.y - (attacker ? attacker.y : target.y);
+          const dist = Math.hypot(dx, dy) || 1;
+          const kb = (customKnockback !== null && customKnockback !== undefined ? customKnockback : (4 * (attacker ? attacker.size : 1.0)));
+          kx = (dx / dist) * kb;
+          ky = (dy / dist) * kb;
+        }
+        
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({
+            type: 'damage',
+            data: {
+              target: target.isAI ? target.name : target.netId,
+              isBot: target.isAI,
+              amount: finalAmount,
+              kx: kx,
+              ky: ky
+            }
+          }));
+        }
+        return;
+      }
+
       // Apply Beast Mode x2 damage modifier!
       if (attacker && attacker.beastModeTime > 0) {
         amount *= 2;
@@ -8137,6 +8682,13 @@
       if (skillSlot === 1 && caster.skillCD1 > 0) return;
       if (skillSlot === 2 && caster.skillCD2 > 0) return;
       if (skillSlot === 3 && (caster.skillCD3 > 0 || !caster.customSkill)) return;
+
+      if (caster === myPlayer && isOnlineMode && !vsAI && socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'skill',
+          data: { slot: skillSlot, angle: myPlayer.facing }
+        }));
+      }
 
       caster.revealTimer = 4.0;
       if (caster.inBush && caster.currentBush) {
@@ -12205,6 +12757,7 @@
       gameActive = false;
       cancelAnimationFrame(animFrame);
       clearInterval(timerInterval);
+      clearInterval(networkSendInterval);
       document.getElementById('gameCanvas').style.display = 'none';
       document.getElementById('gameUI').style.display = 'none';
       document.getElementById('ko-overlay').classList.add('hidden');
@@ -12803,6 +13356,24 @@
 
           const dist = Math.hypot(p.x - ds.x, p.y - ds.y);
           if (dist < 32 * p.size) {
+            if (isOnlineMode && !vsAI) {
+              const isMe = (p === myPlayer);
+              const isBotIControl = (isHost && p.isAI);
+              if (!isMe && !isBotIControl) continue;
+              
+              if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                  type: 'gift-absorbed',
+                  data: {
+                    playerName: p.name,
+                    skillId: ds.skill
+                  }
+                }));
+              }
+              droppedSkills.splice(i, 1);
+              break;
+            }
+
             p.customSkill = ds.skill;
             p.skillCD3 = 0;
 
