@@ -9069,6 +9069,9 @@
         ctx.translate(dx, dy);
       }
 
+      // Apply dynamic battle zoom factor for mobile landscape
+      ctx.scale(zoomFactor, zoomFactor);
+
       ctx.translate(-camera.x, -camera.y);
 
       // Background Parallax Bamboo Forest Silhouettes (Slender & Elegant)
@@ -9090,11 +9093,11 @@
       }
       ctx.restore();
 
-      // Draw tiles
+      // Draw tiles (bounds adjusted for dynamic zoom factor)
       const startTX = Math.floor(camera.x / TILE);
-      const endTX = Math.ceil((camera.x + canvas.width) / TILE);
+      const endTX = Math.ceil((camera.x + canvas.width / zoomFactor) / TILE);
       const startTY = Math.floor(camera.y / TILE);
-      const endTY = Math.ceil((camera.y + canvas.height) / TILE);
+      const endTY = Math.ceil((camera.y + canvas.height / zoomFactor) / TILE);
 
       for (let ty = startTY; ty <= endTY; ty++) {
         for (let tx = startTX; tx <= endTX; tx++) {
@@ -9139,10 +9142,10 @@
         }
       }
 
-      // Draw swimming river fish
+      // Draw swimming river fish (bounds adjusted for zoomFactor)
       riverFish.forEach(f => {
-        if (f.x > camera.x - 30 && f.x < camera.x + canvas.width + 30 &&
-          f.y > camera.y - 30 && f.y < camera.y + canvas.height + 30) {
+        if (f.x > camera.x - 30 && f.x < camera.x + (canvas.width / zoomFactor) + 30 &&
+          f.y > camera.y - 30 && f.y < camera.y + (canvas.height / zoomFactor) + 30) {
           ctx.save();
           ctx.translate(f.x, f.y);
           ctx.rotate(Math.sin(f.anim * 4) * 0.08);
@@ -9160,10 +9163,10 @@
         }
       });
 
-      // Draw mossy rocks
+      // Draw mossy rocks (bounds adjusted for zoomFactor)
       mossRocks.forEach(rk => {
-        if (rk.x > camera.x - 50 && rk.x < camera.x + canvas.width + 50 &&
-          rk.y > camera.y - 50 && rk.y < camera.y + canvas.height + 50) {
+        if (rk.x > camera.x - 50 && rk.x < camera.x + (canvas.width / zoomFactor) + 50 &&
+          rk.y > camera.y - 50 && rk.y < camera.y + (canvas.height / zoomFactor) + 50) {
           ctx.save();
           ctx.translate(rk.x, rk.y);
           // Rock base
@@ -9194,8 +9197,8 @@
             const isNearRiver = Math.abs(sy - 1200) < 240;
 
             if (tile !== 'water' && tile !== 'bridge' && !isNearRiver) {
-              if (sx > camera.x - 120 && sx < camera.x + canvas.width + 120 &&
-                sy > camera.y - 100 && sy < camera.y + canvas.height + 350) {
+              if (sx > camera.x - 120 && sx < camera.x + (canvas.width / zoomFactor) + 120 &&
+                sy > camera.y - 100 && sy < camera.y + (canvas.height / zoomFactor) + 350) {
 
                 ctx.save();
                 ctx.translate(sx, sy);
