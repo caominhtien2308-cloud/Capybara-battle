@@ -3906,6 +3906,14 @@
             <div class="lobby-icon">🔑</div>
           </div>
         </div>
+        <div class="lobby-input-grp">
+          <label class="lobby-label">MÁY CHỦ MULTIPLAYER</label>
+          <div class="lobby-wrap">
+            <input type="text" id="loginServer" class="lobby-field" placeholder="localhost:8765" autocomplete="off"
+              value="localhost:8765">
+            <div class="lobby-icon">🌐</div>
+          </div>
+        </div>
         <button class="lobby-btn lobby-btn-login" id="loginBtn" onclick="doLogin()">ĐĂNG NHẬP LOBBY</button>
         <button class="lobby-btn lobby-btn-instant" id="instantPlayBtn" onclick="doLogin()">CHƠI NGAY KHÔNG CẦN TÀI
           KHOẢN</button>
@@ -5338,11 +5346,16 @@
 
     // ==================== LOGIN ====================
     function doLogin() {
+      const customSrv = document.getElementById('loginServer')?.value.trim();
+      if (customSrv && (!socket || socket.readyState !== WebSocket.OPEN)) {
+        connectToServer(customSrv);
+      }
+
       const u = document.getElementById('loginUser').value.trim() || 'CapyPlayer';
       currentUser = u;
       hideAll();
       document.getElementById('menuScreen').classList.remove('hidden');
-      document.getElementById('menuWelcome').innerHTML = `Chào mừng trở lại, ${u}! 🦫 <span style="font-size:11px; padding:3px 8px; border-radius:12px; margin-left:8px; font-weight:bold; background:${isOnlineMode ? '#10B981' : '#6B7280'}; color:#fff; display:inline-block; vertical-align:middle; line-height:1.2;">${isOnlineMode ? '● ONLINE' : '● OFFLINE (BOTS)'}</span>`;
+      updateWelcomeBadge();
       buildMenuCapys();
       AudioManager.playBGM('lobby');
     }
@@ -5377,24 +5390,43 @@
     }
 
     // ==================== MULTIPLAYER NETWORK SYSTEM ====================
-    function connectToServer() {
-      const SERVER_URL = 'ws://localhost:8765';
+    function connectToServer(customServer = null) {
+      if (socket) {
+        socket.onclose = null;
+        socket.onerror = null;
+        socket.close();
+      }
+      
+      let host = customServer || document.getElementById('loginServer')?.value.trim() || 'localhost:8765';
+      if (!host.includes(':') && !host.startsWith('ws')) {
+        host += ':8765';
+      }
+      
+      let protocol = 'ws://';
+      if (host.startsWith('ws://') || host.startsWith('wss://')) {
+        protocol = '';
+      }
+      
+      const SERVER_URL = protocol + host;
       console.log("Attempting to connect to CapyBrawl Multiplayer Server at " + SERVER_URL + "...");
       socket = new WebSocket(SERVER_URL);
       
       socket.onopen = () => {
         isOnlineMode = true;
         console.log("Connected to CapyBrawl Multiplayer Server successfully!");
+        updateWelcomeBadge();
       };
       
       socket.onerror = (err) => {
         isOnlineMode = false;
         console.warn("Could not connect to multiplayer server, falling back to Offline mode.");
+        updateWelcomeBadge();
       };
       
       socket.onclose = () => {
         isOnlineMode = false;
         console.warn("Multiplayer server disconnected. Offline fallback active.");
+        updateWelcomeBadge();
         if (gameActive) {
           alert("Mất kết nối với máy chủ!");
           stopGame();
@@ -5410,6 +5442,13 @@
           console.error("Error parsing socket message:", e);
         }
       };
+    }
+
+    function updateWelcomeBadge() {
+      const el = document.getElementById('menuWelcome');
+      if (el) {
+        el.innerHTML = `Chào mừng trở lại, ${currentUser}! 🦫 <span style="font-size:11px; padding:3px 8px; border-radius:12px; margin-left:8px; font-weight:bold; background:${isOnlineMode ? '#10B981' : '#6B7280'}; color:#fff; display:inline-block; vertical-align:middle; line-height:1.2;">${isOnlineMode ? '● ONLINE' : '● OFFLINE (BOTS)'}</span>`;
+      }
     }
 
     function handleServerMessage(msg) {
